@@ -1,0 +1,5 @@
+connection string
+workstation id=aspnetlab.mssql.somee.com;packet size=4096;user id=Dhillonharsh_SQLLogin_2;pwd=kd6gexq6gg;data source=aspnetlab.mssql.somee.com;persist security info=False;initial catalog=aspnetlab;TrustServerCertificate=True
+
+login password
+kd6gexq6gg
