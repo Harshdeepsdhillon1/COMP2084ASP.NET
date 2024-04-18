@@ -1,24 +1,68 @@
-<Project Sdk="Microsoft.NET.Sdk">
+using DotNetDrinks.Controllers;
+using DotNetDrinks.Data;
+using DotNetDrinks.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Xunit;
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+namespace DotNetDrinks.Tests
+{
+public class ProductsControllerTests
+{
+private readonly ProductsController _controller;
+private readonly ApplicationDbContext _context;
 
-    <IsPackable>false</IsPackable>
-  </PropertyGroup>
+public ProductsControllerTests()
+{
+// Create an in-memory database for testing
+var options = new DbContextOptionsBuilder<ApplicationDbContext>
+	()
+	.UseInMemoryDatabase(databaseName: "TestDatabase")
+	.Options;
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.4" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
-    <PackageReference Include="MSTest.TestAdapter" Version="3.3.1" />
-    <PackageReference Include="MSTest.TestFramework" Version="3.3.1" />
-    <PackageReference Include="coverlet.collector" Version="6.0.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
+	_context = new ApplicationDbContext(options);
 
-  <ItemGroup>
-    <ProjectReference Include="..\DotNetDrinks\DotNetDrinks.csproj" />
-  </ItemGroup>
+	// Add some sample data to the in-memory database
+	_context.Products.Add(new Product { Id = 1, Name = "Product 1", Price = 10.00m });
+	_context.Products.Add(new Product { Id = 2, Name = "Product 2", Price = 20.00m });
+	_context.SaveChanges();
 
-</Project>
+	_controller = new ProductsController(_context);
+	}
+
+	[Fact]
+	public async Task Edit_Get_ReturnsViewResultWithProduct()
+	{
+	// Arrange
+	var id = 1;
+
+	// Act
+	var result = await _controller.Edit(id);
+
+	// Assert
+	var viewResult = Assert.IsType<ViewResult>
+		(result);
+		var model = Assert.IsAssignableFrom<Product>(viewResult.ViewData.Model);
+            Assert.Equal(id, model.Id);
+        }
+
+        [Fact]
+        public async Task DeleteConfirmed_RemovesProductFromDatabase()
+        {
+            // Arrange
+            var id = 1;
+
+            // Act
+            await _controller.DeleteConfirmed(id);
+
+            // Assert
+            var product = await _context.Products.FindAsync(id);
+            Assert.Null(product);
+        }
+    }
+}
